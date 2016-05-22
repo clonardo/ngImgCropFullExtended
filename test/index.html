@@ -78,7 +78,7 @@
         <label for="fileInput">Select Image:</label>
         <input type="file" id="fileInput" accept="image/*"/>
         <button type="reset">Clear</button>
-        <button ng-click="imageDataURI='test.jpg'">Set Test Image</button>
+        <button ng-click="setTestImg()">Set Test Image</button>
     </form>
     <div>
         <label>Image URL:
@@ -100,6 +100,7 @@
     </div>
 
     <div ng-if="enableCrop" class="cropArea" ng-class="{'big':size=='big', 'medium':size=='medium', 'small':size=='small'}">
+        <!--
         <img-crop 
             image="imageDataURI" 
             result-image="$parent.resImageDataURI" 
@@ -122,6 +123,14 @@
             on-load-error="onLoadError()"
             live-view="blockingObject"
             area-coords="myAreaCoords">
+        </img-crop>-->
+        new version:
+        <img-crop config="cfg"
+        on-change="onChange($dataURI)"
+        on-load-begin="onLoadBegin()" 
+            on-load-done="onLoadDone()" 
+            on-load-error="onLoadError()"
+            live-view="blockingObject">
         </img-crop>
     </div>
     <div style="text-align:center">
@@ -139,7 +148,7 @@
     <script type="text/javascript" src="../compile/unminified/ng-img-crop.js?1"></script>
     <script type="text/javascript">
     angular.module('app', ['ngImgCrop'])
-        .controller('Ctrl', function($scope) {
+        .controller('Ctrl', function($scope, $timeout) {
             $scope.blockingObject = {block:true};
             $scope.callTestFuntion = function(){
                 $scope.blockingObject.render(function(dataURL){
@@ -162,7 +171,7 @@
             $scope.selMinSize = 100;
             $scope.selInitSize = [{w:200,h:80}];
             $scope.resImgSize =  [{w:200,h:150},{w:400,h:300}];
-            //$scope.aspectRatio=1.2;
+            $scope.aspectRatio=1.2;
             $scope.onChange = function($dataURI) {
                 console.log('onChange fired');
             };
@@ -178,6 +187,40 @@
             $scope.getBlob = function() {
                 console.log($scope.resBlob);
             };
+            
+            $scope.cfg = {
+                'image':$scope.imageDataURI, 
+                'result-image':$scope.$parent.resImageDataURI, 
+                'result-blob':$scope.$parent.resBlob, 
+                'url-blob':$scope.$parent.urlBlob,
+                'change-on-fly':$scope.changeOnFly, 
+                'area-type': $scope.type, 
+                'area-min-size':$scope.selMinSize, 
+                'area-init-size':$scope.selInitSize,
+                'result-image-format':$scope.resImgFormat,
+                'result-image-quality':$scope.resImgQuality, 
+                'result-image-size':$scope.resImgSize,
+                'aspect-ratio':$scope.aspectRatio,
+                'allow-crop-resize-on-corners':false,
+                'init-max-area':true,
+                'chargement':'Testing Message',
+                //'on-change':$scope.onChange, 
+                //'on-load-begin':$scope.onLoadBegin(), 
+                //'on-load-done':$scope.onLoadDone(), 
+                //'on-load-error':$scope.onLoadError(),
+                //'live-view':$scope.blockingObject,
+                'area-coords':$scope.myAreaCoords
+            }
+            
+            $scope.setTestImg = function(){
+                console.log('setting image');
+                $timeout(function(){
+                    $scope.$apply(function(){
+                        $scope.cfg.image='test.jpg';
+                    });
+                },0);
+                
+            }
             var handleFileSelect = function(evt) {
                 var file = evt.currentTarget.files[0],
                     reader = new FileReader();

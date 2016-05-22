@@ -5,7 +5,7 @@
  * Copyright (c) 2016 undefined
  * License: MIT
  *
- * Generated at Friday, May 6th, 2016, 12:18:49 PM
+ * Generated at Sunday, May 22nd, 2016, 9:19:17 AM
  */
 (function() {
 var crop = angular.module('ngImgCrop', []);
@@ -3006,14 +3006,178 @@ crop.directive('imgCrop', ['$timeout', 'cropHost', 'cropPubSub', function ($time
             onChange: '&',
             onLoadBegin: '&',
             onLoadDone: '&',
-            onLoadError: '&'
+            onLoadError: '&',
+            config: '='
         },
         template: '<canvas></canvas>',
         controller: ['$scope', function ($scope) {
             $scope.events = new CropPubSub();
         }],
         link: function (scope, element) {
-
+            
+            //init watchers
+            var watchers = [];
+            
+            //all possible params
+            var applyCfg = function(){
+                var params = [
+                    {
+                        'extName': "area-min-relative-size",
+                        'localName': "areaMinRelativeSize",
+                        'isOutput': false
+                    },
+                    {
+                        'extName': "result-image-size",
+                        'localName': "resultImageSize",
+                        'isOutput': true
+                    },
+                    {
+                        'extName': "result-image-format",
+                        'localName': "resultImageFormat",
+                        'isOutput': true
+                    },
+                    {
+                        'extName': "result-image-quality",
+                        'localName': "resultImageQuality",
+                        'isOutput': true
+                    },
+                    {
+                        'extName': "aspect-ratio",
+                        'localName': "aspectRatio",
+                        'isOutput': false
+                    },
+                    {
+                        'extName': "allow-crop-resize-on-corners",
+                        'localName': "allowCropResizeOnCorners",
+                        'isOutput': false
+                    },
+                    {
+                        'extName': "dominant-color",
+                        'localName': "dominantColor",
+                        'isOutput': true
+                    },
+                    {
+                        'extName': "palette-color",
+                        'localName': "paletteColor",
+                        'isOutput': false
+                    },
+                    {
+                        'extName': "palette-color-length",
+                        'localName': "paletteColorLength",
+                        'isOutput': false
+                    },
+                    {
+                        'extName': "on-change",
+                        'localName': "onChange",
+                        'isOutput': false
+                    },
+                    {
+                        'extName': "cropject",
+                        'localName': "cropject",
+                        'isOutput': true
+                    },
+                    {
+                        'extName': "on-load-begin",
+                        'localName': "onLoadBegin",
+                        'isOutput': false
+                    },
+                    {
+                        'extName': "on-load-done",
+                        'localName': "onLoadDone",
+                        'isOutput': false
+                    },
+                    {
+                        'extName': "on-load-error",
+                        'localName': "onLoadError",
+                        'isOutput': false
+                    },
+                    {
+                        'extName': "image",
+                        'localName': "image",
+                        'isOutput': false
+                    },
+                    {
+                        'extName': "result-image",
+                        'localName': "resultImage",
+                        'isOutput': true
+                    },
+                    {
+                        'extName': "result-array-image",
+                        'localName': "resultArrayImage",
+                        'isOutput': true
+                    },
+                    {
+                        'extName': "result-blob",
+                        'localName': "resultBlob",
+                        'isOutput': true
+                    },
+                    {
+                        'extName': "image",
+                        'localName': "image",
+                        'isOutput': false
+                    },
+                    {
+                        'extName': "chargement",
+                        'localName': "chargement",
+                        'isOutput': false
+                    },
+                    {
+                        'extName': "live-view",
+                        'localName': "liveView",
+                        'isOutput': true
+                    },
+                    {
+                        'extName': "area-coords",
+                        'localName': "areaCoords",
+                        'isOutput': false
+                    }
+                ]
+                
+                
+                //config objects rules you, sucka
+                if(scope.config){
+                    console.log(scope.config);
+                    for(var i = 0; i< params.length; ++i){
+                        var thisParamName = params[i].extName;
+                        var localName = params[i].localName;
+                        var isAnOutput = params[i].isOutput;
+                        
+                        if(scope.config.hasOwnProperty(thisParamName)){
+                            console.log(thisParamName, ' ', localName);
+                            
+                            scope[localName] = scope.config[(thisParamName)];
+                            
+                            if(isAnOutput){
+                                //push outputs back up
+                                //var watch = scope.$watch(function(){ return scope[localName];}, function(newVal){
+                                var watch = scope.$watch([localName], function(newVal){
+                                    scope.$applyAsync(function(){
+                                        scope.config[thisParamName] = newVal;
+                                        console.log('watch outputs:',scope.config);     
+                                    });
+                                });
+                            }
+                            else{
+                                //handle inputs
+                                //var watch = scope.$watch(function(){ return scope.config[thisParamName];}, function(newVal){
+                                var watch = scope.$watch(function(){return scope.config[thisParamName]}, function(newVal){
+                                   scope.$applyAsync(function(){
+                                        console.log('newVal: ',newVal);
+                                        scope[localName] = newVal;
+                                        console.log('watch inputs:',scope.config, scope);
+                                    }); 
+                                });
+                            }
+                            //register watcher
+                            watchers.push(watch);
+                        }
+                    }
+                }
+            }
+            
+            
+            applyCfg();
+            
             if (scope.liveView && typeof scope.liveView.block == 'boolean') {
                 scope.liveView.render = function (callback) {
                     updateResultImage(scope, true, callback);
@@ -3135,7 +3299,19 @@ crop.directive('imgCrop', ['$timeout', 'cropHost', 'cropPubSub', function ($time
                 }));
 
             // Sync CropHost with Directive's options
+            scope.$watch('config.image', function (newVal) {
+                scope.image = scope.config.image;
+                console.log('got update');
+                if (newVal) {
+                    displayLoading();
+                }
+                $timeout(function () {
+                    cropHost.setInitMax(scope.initMaxArea);
+                    cropHost.setNewImageSource(scope.image);
+                }, 100);
+            });
             scope.$watch('image', function (newVal) {
+                console.log('got update');
                 if (newVal) {
                     displayLoading();
                 }
@@ -3215,6 +3391,10 @@ crop.directive('imgCrop', ['$timeout', 'cropHost', 'cropPubSub', function ($time
             // Destroy CropHost Instance when the directive is destroying
             scope.$on('$destroy', function () {
                 cropHost.destroy();
+                //and clean up watchers
+                watchers.forEach(item, function(){
+                   item(); 
+                });
             });
         }
     };
